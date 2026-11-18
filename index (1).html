@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Netson</title>
+<meta name="description" content="Netson: live streams, videos, music and photos in one place.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2314121F'/%3E%3Ctext x='50' y='70' font-size='64' text-anchor='middle' font-family='Arial' font-weight='700' fill='%23FFB547'%3EN%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #14121F;
+    --panel: #1E1B2E;
+    --panel-2: #2A2640;
+    --line: #38335A;
+    --text: #F3EFE6;
+    --muted: #A9A3C2;
+    --amber: #FFB547;
+    --live: #4FD1C5;
+    --danger: #FF7A7A;
+    --display: "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+    --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  body {
+    margin: 0; background: var(--ink); color: var(--text);
+    font: 400 16px/1.5 var(--body); min-height: 100vh;
+  }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+  /* ---------- top bar ---------- */
+  header.bar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 20px;
+    padding: 14px clamp(16px, 4vw, 48px);
+    background: rgba(20,18,31,.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { font: 800 26px/1 var(--display); letter-spacing: -.02em; color: var(--amber); text-decoration: none; }
+  nav.jump { display: flex; gap: 4px; overflow-x: auto; flex: 1; scrollbar-width: none; }
+  nav.jump a {
+    padding: 8px 14px; border-radius: 999px; text-decoration: none;
+    color: var(--muted); font-weight: 500; white-space: nowrap;
+  }
+  nav.jump a:hover { color: var(--text); background: var(--panel); }
+  .search {
+    background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    border-radius: 999px; padding: 9px 16px; width: 200px; font: inherit;
+  }
+  .search::placeholder { color: var(--muted); }
+  .btn {
+    background: var(--panel-2); border: 1px solid var(--line);
+    padding: 9px 16px; border-radius: 999px; font-weight: 600;
+  }
+  .btn:hover { border-color: var(--amber); }
+  .btn.primary { background: var(--amber); color: #1B1300; border-color: var(--amber); }
+  .btn.primary:hover { filter: brightness(1.08); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    margin: 0 clamp(16px, 4vw, 48px); margin-top: 28px;
+    border-radius: 22px; overflow: hidden; position: relative;
+    min-height: 340px; display: flex; align-items: flex-end;
+    background: linear-gradient(120deg, #2a2050, #14121F 70%);
+    border: 1px solid var(--line);
+  }
+  .hero .bg {
+    position: absolute; inset: 0; background-size: cover; background-position: center;
+    opacity: .45;
+  }
+  .hero .shade { position: absolute; inset: 0; background: linear-gradient(to top, var(--ink) 4%, rgba(20,18,31,.1) 70%); }
+  .hero .copy { position: relative; padding: clamp(20px, 4vw, 44px); max-width: 720px; }
+  .hero h1 {
+    font: 800 clamp(34px, 6vw, 68px)/1 var(--display);
+    letter-spacing: -.03em; margin: 10px 0 12px;
+  }
+  .hero p { margin: 0 0 20px; color: var(--muted); font-size: 18px; max-width: 46ch; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 600; color: var(--live); font-size: 15px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--live); animation: pulse 1.8s ease-out infinite; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(79,209,197,.7); }
+    100% { box-shadow: 0 0 0 12px rgba(79,209,197,0); }
+  }
+
+  /* ---------- sections ---------- */
+  main { padding: 12px clamp(16px, 4vw, 48px) 80px; }
+  section { margin-top: 44px; }
+  section h2 { font: 700 28px/1.1 var(--display); letter-spacing: -.02em; margin: 0 0 16px; display: flex; align-items: baseline; gap: 12px; }
+  section h2 small { font: 500 15px var(--body); color: var(--muted); letter-spacing: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; }
+  .card { position: relative; text-align: left; background: none; border: 0; padding: 0; }
+  .card .thumb {
+    aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; position: relative;
+    background: var(--panel-2); border: 1px solid var(--line);
+    display: grid; place-items: center; color: var(--muted); font: 800 34px var(--display);
+  }
+  .card .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .card:hover .thumb { border-color: var(--amber); }
+  .card .name { margin-top: 8px; font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .badge {
+    position: absolute; left: 10px; top: 10px; z-index: 2;
+    background: rgba(20,18,31,.85); color: var(--live); font-size: 13px; font-weight: 600;
+    padding: 3px 9px; border-radius: 999px; display: flex; align-items: center; gap: 6px;
+  }
+  .card .del {
+    position: absolute; right: 8px; top: 8px; z-index: 3; width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(20,18,31,.9); border: 1px solid var(--danger); color: var(--danger); font-size: 18px; line-height: 1;
+  }
+  .empty {
+    border: 1px dashed var(--line); border-radius: 14px; padding: 26px; color: var(--muted);
+  }
+  #notice { margin: 20px clamp(16px,4vw,48px) 0; padding: 14px 18px; border-radius: 12px; background: #3a2230; border: 1px solid var(--danger); color: #ffd3d3; }
+  #notice[hidden] { display: none; }
+
+  /* ---------- dialogs ---------- */
+  dialog { border: 1px solid var(--line); border-radius: 20px; background: var(--panel); color: var(--text); padding: 0; max-width: 96vw; }
+  dialog::backdrop { background: rgba(8,6,16,.82); }
+  #player { width: min(1100px, 96vw); }
+  .phead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .phead h3 { margin: 0; font: 700 20px var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #stage { background: #000; display: grid; place-items: center; min-height: 240px; position: relative; }
+  #stage video, #stage img.full { width: 100%; max-height: 74vh; object-fit: contain; display: block; }
+  #stage .audio { width: 100%; padding: 28px; display: grid; gap: 18px; justify-items: center; background: var(--panel); }
+  #stage .audio img { width: min(340px, 70%); aspect-ratio: 16/9; object-fit: cover; border-radius: 14px; }
+  #stage .audio audio { width: min(560px, 100%); }
+  .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; background: rgba(20,18,31,.8); border: 1px solid var(--line); font-size: 22px; }
+  .nav.prev { left: 12px; } .nav.next { right: 12px; }
+
+  #admin { width: min(460px, 94vw); padding: 24px; }
+  #admin h3 { font: 700 24px var(--display); margin: 0 0 6px; }
+  #admin p.sub { margin: 0 0 18px; color: var(--muted); }
+  label { display: block; font-weight: 500; margin: 12px 0 5px; }
+  input[type=text], input[type=url], input[type=email], input[type=password], select {
+    width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--ink); color: var(--text); font: inherit;
+  }
+  .row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .msg { margin-top: 12px; min-height: 1.4em; color: var(--danger); }
+  .msg.ok { color: var(--live); }
+
+  @media (max-width: 680px) {
+    .search { width: 120px; }
+    header.bar { gap: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dot { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <a class="brand" href="#top">Netson</a>
+  <nav class="jump" aria-label="Sections">
+    <a href="#live">Live</a>
+    <a href="#videos">Videos</a>
+    <a href="#songs">Music</a>
+    <a href="#pictures">Photos</a>
+  </nav>
+  <input id="search" class="search" type="search" placeholder="Search" aria-label="Search everything">
+  <button id="adminBtn" class="btn">Admin</button>
+</header>
+
+<div id="notice" hidden></div>
+
+<div id="top"></div>
+<div class="hero" id="hero"></div>
+
+<main id="sections"></main>
+
+<dialog id="player" aria-label="Player">
+  <div class="phead">
+    <h3 id="ptitle"></h3>
+    <button id="pclose" class="btn">Close</button>
+  </div>
+  <div id="stage"></div>
+</dialog>
+
+<dialog id="admin" aria-label="Admin">
+  <div id="adminBody"></div>
+</dialog>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDZT_d5peCD3aiHWlLjK8W7Ct2f5Z3_r2I",
+  authDomain: "rock-league-swipe.firebaseapp.com",
+  databaseURL: "https://rock-league-swipe-default-rtdb.firebaseio.com",
+  projectId: "rock-league-swipe",
+  storageBucket: "rock-league-swipe.firebasestorage.app",
+  messagingSenderId: "450830531157",
+  appId: "1:450830531157:web:ef25a0a89d71e0520432dc",
+  measurementId: "G-DJHLY3FH8G"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+
+const CATS = [
+  { key: "live",     label: "Live now",  nav: "Live" },
+  { key: "videos",   label: "Videos",    nav: "Videos" },
+  { key: "songs",    label: "Music",     nav: "Music" },
+  { key: "pictures", label: "Photos",    nav: "Photos" }
+];
+const $ = (s, el = document) => el.querySelector(s);
+let data = {}, user = null, query = "", hls = null, pic = { list: [], i: 0 };
+
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v);
+  }
+  for (const c of kids) n.append(c);
+  return n;
+}
+
+function itemsOf(cat) {
+  const raw = data[cat] || {};
+  const arr = Array.isArray(raw) ? raw.map((v, i) => [String(i), v]) : Object.entries(raw);
+  return arr.filter(([, v]) => v && typeof v === "object" && v.url).map(([id, v]) => ({
+    id, cat,
+    title: v.title || v.name || v.url,
+    url: v.url,
+    thumb: v.thumbnail || v.thumb || v.image || (cat === "pictures" ? v.url : "")
+  }));
+}
+const matches = it => !query || it.title.toLowerCase().includes(query);
+
+/* ---------- data ---------- */
+db.ref("Netson").on("value",
+  snap => { data = snap.val() || {}; $("#notice").hidden = true; render(); },
+  err => {
+    const n = $("#notice");
+    n.hidden = false;
+    n.textContent = "Netson can't read the database. In Firebase, open Realtime Database > Rules and allow reads on Netson.";
+    console.error(err);
+  });
+
+/* ---------- render ---------- */
+function render() {
+  renderHero();
+  const root = $("#sections");
+  root.replaceChildren();
+  for (const cat of CATS) {
+    const all = itemsOf(cat.key);
+    const list = all.filter(matches);
+    if (query && !list.length) continue;
+    const sec = el("section", { id: cat.key });
+    sec.append(el("h2", {}, cat.label, el("small", {}, all.length ? `${list.length} item${list.length === 1 ? "" : "s"}` : "")));
+    if (!all.length) {
+      sec.append(el("div", { class: "empty" },
+        `Nothing here yet. Add ${cat.nav.toLowerCase()} in Admin, or in Firebase under Netson/${cat.key}.`));
+    } else {
+      const grid = el("div", { class: "grid" });
+      list.forEach(it => grid.append(card(it, list)));
+      sec.append(grid);
+    }
+    root.append(sec);
+  }
+  if (query && !root.children.length) root.append(el("div", { class: "empty" }, `No results for "${query}".`));
+}
+
+function card(it, list) {
+  const thumb = el("div", { class: "thumb" }, it.title.trim().charAt(0).toUpperCase() || "N");
+  if (it.thumb) {
+    const img = el("img", { src: it.thumb, alt: "", loading: "lazy" });
+    img.addEventListener("error", () => img.remove());
+    thumb.append(img);
+  }
+  const c = el("div", { class: "card" });
+  const open = el("button", { class: "card", "aria-label": "Open " + it.title, onclick: () => openItem(it, list) });
+  if (it.cat === "live") open.append(el("span", { class: "badge" }, el("span", { class: "dot" }), "Live"));
+  open.append(thumb, el("span", { class: "name" }, it.title));
+  c.append(open);
+  if (user) {
+    c.append(el("button", {
+      class: "del", title: "Delete", "aria-label": "Delete " + it.title,
+      onclick: async () => {
+        if (!confirm(`Delete "${it.title}"?`)) return;
+        try { await db.ref(`Netson/${it.cat}/${it.id}`).remove(); }
+        catch (e) { alert("Delete failed: " + e.message); }
+      }
+    }, "×"));
+  }
+  return c;
+}
+
+function renderHero() {
+  const hero = $("#hero");
+  hero.replaceChildren();
+  const live = itemsOf("live")[0];
+  const bg = el("div", { class: "bg" });
+  if (live && live.thumb) bg.style.backgroundImage = `url("${live.thumb.replace(/"/g, "%22")}")`;
+  const copy = el("div", { class: "copy" });
+  if (live) {
+    copy.append(
+      el("span", { class: "tag" }, el("span", { class: "dot" }), "Live now"),
+      el("h1", {}, live.title),
+      el("p", {}, "Tap in and watch it as it happens."),
+      el("button", { class: "btn primary", onclick: () => openItem(live, itemsOf("live")) }, "Watch live")
+    );
+  } else {
+    copy.append(
+      el("h1", {}, "Netson"),
+      el("p", {}, "Live streams, videos, music and photos in one place."),
+      el("a", { class: "btn primary", href: "#videos", style: "text-decoration:none;display:inline-block" }, "Browse videos")
+    );
+  }
+  hero.append(bg, el("div", { class: "shade" }), copy);
+}
+
+/* ---------- player ---------- */
+const player = $("#player"), stage = $("#stage");
+const isHls = u => /\.m3u8(\?|#|$)/i.test(u);
+
+function attach(media, url) {
+  if (isHls(url) && window.Hls && Hls.isSupported()) {
+    hls = new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(media);
+  } else {
+    media.src = url;
+  }
+  media.play && media.play().catch(() => {});
+}
+
+function openItem(it, list) {
+  cleanup();
+  $("#ptitle").textContent = it.title;
+  if (it.cat === "pictures") {
+    pic = { list, i: Math.max(0, list.findIndex(x => x.id === it.id)) };
+    showPic();
+  } else if (it.cat === "songs") {
+    const audio = el("audio", { controls: "", autoplay: "" });
+    const box = el("div", { class: "audio" });
+    if (it.thumb) box.append(el("img", { src: it.thumb, alt: "" }));
+    box.append(audio);
+    stage.append(box);
+    attach(audio, it.url);
+  } else {
+    const video = el("video", { controls: "", autoplay: "", playsinline: "" });
+    stage.append(video);
+    attach(video, it.url);
+  }
+  if (!player.open) player.showModal();
+}
+
+function showPic() {
+  const it = pic.list[pic.i];
+  stage.replaceChildren(el("img", { class: "full", src: it.url, alt: it.title }));
+  $("#ptitle").textContent = `${it.title}  (${pic.i + 1}/${pic.list.length})`;
+  if (pic.list.length > 1) {
+    stage.append(
+      el("button", { class: "nav prev", "aria-label": "Previous photo", onclick: () => step(-1) }, "‹"),
+      el("button", { class: "nav next", "aria-label": "Next photo", onclick: () => step(1) }, "›")
+    );
+  }
+}
+function step(d) { pic.i = (pic.i + d + pic.list.length) % pic.list.length; showPic(); }
+
+function cleanup() {
+  stage.querySelectorAll("video,audio").forEach(m => { m.pause(); m.removeAttribute("src"); m.load(); });
+  if (hls) { hls.destroy(); hls = null; }
+  stage.replaceChildren();
+}
+player.addEventListener("close", cleanup);
+$("#pclose").addEventListener("click", () => player.close());
+player.addEventListener("click", e => { if (e.target === player) player.close(); });
+document.addEventListener("keydown", e => {
+  if (!player.open || !stage.querySelector("img.full") || pic.list.length < 2) return;
+  if (e.key === "ArrowRight") step(1);
+  if (e.key === "ArrowLeft") step(-1);
+});
+
+/* ---------- search ---------- */
+$("#search").addEventListener("input", e => { query = e.target.value.trim().toLowerCase(); render(); });
+
+/* ---------- admin ---------- */
+const admin = $("#admin"), adminBody = $("#adminBody");
+$("#adminBtn").addEventListener("click", () => { drawAdmin(); admin.showModal(); });
+admin.addEventListener("click", e => { if (e.target === admin) admin.close(); });
+
+auth.onAuthStateChanged(u => {
+  user = u;
+  $("#adminBtn").textContent = u ? "Admin (signed in)" : "Admin";
+  if (admin.open) drawAdmin();
+  render();
+});
+
+function field(label, input) { return el("div", {}, el("label", {}, label), input); }
+
+function drawAdmin() {
+  adminBody.replaceChildren();
+  const msg = el("div", { class: "msg", role: "status" });
+
+  if (!user) {
+    const email = el("input", { type: "email", autocomplete: "username", required: "" });
+    const pass = el("input", { type: "password", autocomplete: "current-password", required: "" });
+    const form = el("form", {},
+      el("h3", {}, "Sign in"),
+      el("p", { class: "sub" }, "Sign in to add or remove items."),
+      field("Email", email), field("Password", pass),
+      el("div", { class: "row" },
+        el("button", { class: "btn primary", type: "submit" }, "Sign in"),
+        el("button", { class: "btn", type: "button", onclick: () => admin.close() }, "Cancel")),
+      msg);
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      msg.className = "msg"; msg.textContent = "Signing in...";
+      try { await auth.signInWithEmailAndPassword(email.value, pass.value); }
+      catch (err) { msg.textContent = err.message; }
+    });
+    adminBody.append(form);
+    return;
+  }
+
+  const cat = el("select", {}, ...CATS.map(c => el("option", { value: c.key }, c.nav)));
+  const title = el("input", { type: "text", required: "" });
+  const url = el("input", { type: "url", required: "", placeholder: "https://..." });
+  const thumb = el("input", { type: "url", placeholder: "https://... (optional)" });
+  const form = el("form", {},
+    el("h3", {}, "Add to Netson"),
+    el("p", { class: "sub" }, `Signed in as ${user.email}. Items show up on the site and in the Roku app right away.`),
+    field("Section", cat), field("Title", title), field("Media URL", url), field("Thumbnail URL", thumb),
+    el("div", { class: "row" },
+      el("button", { class: "btn primary", type: "submit" }, "Add item"),
+      el("button", { class: "btn", type: "button", onclick: () => admin.close() }, "Done"),
+      el("button", { class: "btn", type: "button", onclick: () => auth.signOut() }, "Sign out")),
+    msg);
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    msg.className = "msg"; msg.textContent = "Adding...";
+    const rec = { title: title.value.trim(), url: url.value.trim() };
+    if (thumb.value.trim()) rec.thumbnail = thumb.value.trim();
+    try {
+      await db.ref(`Netson/${cat.value}`).push(rec);
+      msg.className = "msg ok"; msg.textContent = `Added "${rec.title}".`;
+      title.value = ""; url.value = ""; thumb.value = "";
+    } catch (err) {
+      msg.textContent = "Couldn't add: " + err.message;
+    }
+  });
+  adminBody.append(form);
+}
+</script>
+</body>
+</html>
